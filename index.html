@@ -1,14 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My PropellerAds Page</title>
-<script>(s=>{s.dataset.zone='9639209',src="https://propu.sh/pfe/current/tag.min.js?z=9639209"})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-  <!-- ✅ Correct PropellerAds JS Code -->
-  <script async data-cfasync="false" src="https://propu.sh/pfe/current/tag.min.js?z=9639209"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Car Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #333; overflow: hidden; }
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #222;
+    }
+    .car {
+      position: absolute;
+      bottom: 20px;
+      width: 50px;
+      height: 100px;
+      background: red;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 10px;
+    }
+    .obstacle {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: yellow;
+      top: -60px;
+      border-radius: 5px;
+    }
+    #leftBtn, #rightBtn {
+      position: absolute;
+      bottom: 20px;
+      width: 30%;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 30px;
+      color: white;
+      border: none;
+    }
+    #leftBtn { left: 10px; }
+    #rightBtn { right: 10px; }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, PropellerAds is now installed!</h1>
-  <p>This is your ad-enabled page. You can now start earning.</p>
+
+<div id="gameArea">
+  <div class="car" id="car"></div>
+  <div id="score">Score: 0</div>
+  <button id="leftBtn">⟵</button>
+  <button id="rightBtn">⟶</button>
+</div>
+
+<script>
+  const car = document.getElementById('car');
+  const gameArea = document.getElementById('gameArea');
+  const scoreEl = document.getElementById('score');
+  const leftBtn = document.getElementById('leftBtn');
+  const rightBtn = document.getElementById('rightBtn');
+
+  let carX = window.innerWidth / 2 - 25;
+  let score = 0;
+  let gameOver = false;
+
+  function moveCar(dir) {
+    if (dir === 'left' && carX > 10) carX -= 30;
+    if (dir === 'right' && carX < window.innerWidth - 60) carX += 30;
+    car.style.left = `${carX}px`;
+  }
+
+  leftBtn.onclick = () => moveCar('left');
+  rightBtn.onclick = () => moveCar('right');
+
+  function spawnObstacle() {
+    if (gameOver) return;
+    const obs = document.createElement('div');
+    obs.classList.add('obstacle');
+    obs.style.left = `${Math.floor(Math.random() * (window.innerWidth - 50))}px`;
+    gameArea.appendChild(obs);
+
+    let obsY = -60;
+    const fall = setInterval(() => {
+      if (gameOver) return clearInterval(fall);
+      obsY += 5;
+      obs.style.top = `${obsY}px`;
+
+      // Collision detection
+      const carRect = car.getBoundingClientRect();
+      const obsRect = obs.getBoundingClientRect();
+      if (
+        carRect.left < obsRect.right &&
+        carRect.right > obsRect.left &&
+        carRect.top < obsRect.bottom &&
+        carRect.bottom > obsRect.top
+      ) {
+        clearInterval(fall);
+        gameArea.innerHTML += `<h1 style="color:white;position:absolute;top:40%;left:20%;font-size:30px;">Game Over!<br>Score: ${score}</h1>`;
+        gameOver = true;
+      }
+
+      if (obsY > window.innerHeight) {
+        obs.remove();
+        score++;
+        scoreEl.textContent = `Score: ${score}`;
+      }
+    }, 30);
+  }
+
+  setInterval(spawnObstacle, 1200);
+</script>
+
 </body>
 </html>
