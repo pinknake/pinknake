@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Car Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; font-family: sans-serif; }
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(#333, #111);
+      overflow: hidden;
+    }
+    .car {
+      position: absolute;
+      bottom: 20px;
+      width: 50px;
+      height: 90px;
+      background: linear-gradient(to bottom, red, darkred);
+      border-radius: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .obstacle {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: yellow;
+      top: -60px;
+      border-radius: 5px;
+    }
+    #leftBtn, #rightBtn {
+      position: absolute;
+      bottom: 20px;
+      width: 30%;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 40px;
+      color: white;
+      border: none;
+    }
+    #leftBtn { left: 10px; }
+    #rightBtn { right: 10px; }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-size: 20px;
+    }
+    #restartBtn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="gameArea">
+  <div class="car" id="car"></div>
+  <div id="score">Score: 0</div>
+  <button id="leftBtn">⟵</button>
+  <button id="rightBtn">⟶</button>
+  <button id="restartBtn">Restart</button>
+</div>
+
+<!-- Sound effects -->
+<audio id="pointSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_49db49f1b5.mp3?filename=pop-94319.mp3"></audio>
+<audio id="crashSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_bf788d8797.mp3?filename=error-126627.mp3"></audio>
+
+<script>
+  const car = document.getElementById('car');
+  const gameArea = document.getElementById('gameArea');
+  const scoreEl = document.getElementById('score');
+  const leftBtn = document.getElementById('leftBtn');
+  const rightBtn = document.getElementById('rightBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const pointSound = document.getElementById('pointSound');
+  const crashSound = document.getElementById('crashSound');
+
+  let carX = window.innerWidth / 2 - 25;
+  let score = 0;
+  let gameOver = false;
+  let gameInterval;
+
+  function moveCar(dir) {
+    if (dir === 'left' && carX > 10) carX -= 30;
+    if (dir === 'right' && carX < window.innerWidth - 60) carX += 30;
+    car.style.left = `${carX}px`;
+  }
+
+  leftBtn.onclick = () => moveCar('left');
+  rightBtn.onclick = () => moveCar('right');
+
+  function spawnObstacle() {
+    if (gameOver) return;
+    const obs = document.createElement('div');
+    obs.classList.add('obstacle');
+    obs.style.left = `${Math.floor(Math.random() * (window.innerWidth - 50))}px`;
+    gameArea.appendChild(obs);
+
+    let obsY = -60;
+    const fall = setInterval(() => {
+      if (gameOver) return clearInterval(fall);
+      obsY += 5;
+      obs.style.top = `${obsY}px`;
+
+      // Collision detection
+      const carRect = car.getBoundingClientRect();
+      const obsRect = obs.getBoundingClientRect();
+      if (
+        carRect.left < obsRect.right &&
+        carRect.right > obsRect.left &&
+        carRect.top < obsRect.bottom &&
+        carRect.bottom > obsRect.top
+      ) {
+        clearInterval(fall);
+        crashSound.play();
+        gameOver = true;
+        restartBtn.style.display = 'block';
+        clearInterval(gameInterval);
+      }
+
+      if (obsY > window.innerHeight) {
+        obs.remove();
+        score++;
+        scoreEl.textContent = `Score: ${score}`;
+        pointSound.play();
+      }
+    }, 30);
+  }
+
+  function startGame() {
+    gameOver = false;
+    score = 0;
+    scoreEl.textContent = 'Score: 0';
+    carX = window.innerWidth / 2 - 25;
+    car.style.left = `${carX}px`;
+    document.querySelectorAll('.obstacle').forEach(o => o.remove());
+    restartBtn.style.display = 'none';
+    gameInterval = setInterval(spawnObstacle, 1200);
+  }
+
+  restartBtn.onclick = () => {
+    startGame();
+  };
+
+  // Auto-start on load
+  startGame();
+</script>
+
+</body>
+</html>
