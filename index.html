@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doraemon Gadget Spin 🎒</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background: linear-gradient(#2196f3,#00bcd4);
+  color:#fff;
+  text-align:center;
+  padding:20px;
+}
+.box{
+  background:#fff;
+  color:#000;
+  border-radius:15px;
+  padding:20px;
+  max-width:340px;
+  margin:auto;
+  box-shadow:0 5px 15px rgba(0,0,0,.4);
+}
+.btn{
+  background:#ff5722;
+  color:#fff;
+  padding:14px;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:bold;
+  display:block;
+  margin-top:15px;
+}
+.reward{
+  display:none;
+  margin-top:15px;
+  font-size:18px;
+  color:green;
+  font-weight:bold;
+}
+.gadget{
+  font-size:22px;
+  margin-top:10px;
+}
+.small{
+  font-size:13px;
+  color:#444;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🎌 Doraemon Gadget Spin</h2>
+<p>Spin & Win Doraemon Gadgets 🎁</p>
+
+<div class="box">
+
+  <div class="gadget" id="gadget">🎒 Mystery Gadget</div>
+
+  <a href="#" class="btn" onclick="spinNow()">
+    🔄 Spin & Get Gadget
+  </a>
+
+  <div class="reward" id="reward">
+    🎉 Gadget Unlocked Successfully!
+  </div>
+
+  <div class="small">Spin again to win more gadgets</div>
+</div>
+
+<script>
+const gadgets = [
+  "Anywhere Door 🚪",
+  "Bamboo Copter 🚁",
+  "Time Machine ⏳",
+  "Big Light 🔦",
+  "Small Light 🔍",
+  "Memory Bread 🍞",
+  "Translation Jelly 🟣",
+  "Air Cannon 💨",
+  "Dress-Up Camera 📸",
+  "What-If Phone Booth ☎️"
+];
+
+const links = [
+  "https://otieu.com/4/10448865",
+  "https://otieu.com/4/10448863",
+  "https://otieu.com/4/10448862",
+  "https://otieu.com/4/10448856",
+  "https://otieu.com/4/10448855",
+  "https://otieu.com/4/10448854",
+  "https://otieu.com/4/10448853",
+  "https://otieu.com/4/10448848",
+  "https://otieu.com/4/10448847",
+  "https://otieu.com/4/10448846"
+];
+
+function spinNow(){
+  let g = Math.floor(Math.random() * gadgets.length);
+  let l = Math.floor(Math.random() * links.length);
+
+  document.getElementById("gadget").innerHTML = gadgets[g];
+  document.getElementById("reward").style.display = "block";
+
+  // OPEN RANDOM DIRECT LINK
+  window.open(links[l], "_blank");
+}
+</script>
+
+</body>
+</html>
