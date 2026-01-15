@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pokémon vs Zombies</title>
+
+<style>
+body{
+  background:#cce;
+  text-align:center;
+  font-family:Arial;
+}
+
+#game{
+  display:grid;
+  grid-template-columns:repeat(9,70px);
+  grid-template-rows:repeat(5,70px);
+  gap:3px;
+  justify-content:center;
+  margin-top:15px;
+}
+
+.cell{
+  width:70px;
+  height:70px;
+  background:#7CFC90;
+  border:1px solid #222;
+  position:relative;
+}
+
+.pokemon img,.zombie img{
+  width:70px;
+  height:70px;
+}
+
+.bullet{
+  width:14px;
+  height:14px;
+  background:orange;
+  border-radius:50%;
+  position:absolute;
+  top:28px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚡ Pokémon vs Zombie Pokémon</h2>
+Energy: <span id="energy">200</span><br><br>
+
+<button onclick="selectPokemon('pikachu',50)">Pikachu (Fast)</button>
+<button onclick="selectPokemon('bulbasaur',75)">Bulbasaur (Strong)</button>
+
+<div id="game"></div>
+
+<script>
+const ROWS=5, COLS=9;
+let energy=200;
+let selected={name:'pikachu',cost:50};
+const energyEl=document.getElementById("energy");
+const game=document.getElementById("game");
+const cells=[];
+
+const images={
+ pikachu:'https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif',
+ bulbasaur:'https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif',
+ zombie:'https://img.pokemondb.net/sprites/black-white/anim/back-normal/rattata.gif'
+};
+
+/* GRID */
+for(let i=0;i<ROWS*COLS;i++){
+ let c=document.createElement("div");
+ c.className="cell";
+ c.dataset.i=i;
+ c.onclick=()=>placePokemon(c);
+ game.appendChild(c);
+ cells.push(c);
+}
+
+/* SELECT */
+function selectPokemon(n,c){
+ selected={name:n,cost:c};
+}
+
+/* PLACE */
+function placePokemon(cell){
+ if(cell.querySelector(".pokemon")) return;
+ if(energy<selected.cost) return;
+
+ let p=document.createElement("div");
+ p.className="pokemon";
+ p.dataset.hp=12;
+ p.innerHTML=`<img src="${images[selected.name]}">`;
+ cell.appendChild(p);
+
+ energy-=selected.cost;
+ energyEl.textContent=energy;
+
+ startShoot(cell,p);
+}
+
+/* SHOOT */
+function startShoot(cell,pokemon){
+ let index=+cell.dataset.i;
+ let row=Math.floor(index/COLS);
+
+ let rate = selected.name==="pikachu"?1000:1500;
+ let damage = selected.name==="pikachu"?2:3;
+
+ let fire=setInterval(()=>{
+  if(!pokemon.parentElement){
+   clearInterval(fire); return;
+  }
+
+  let bullet=document.createElement("div");
+  bullet.className="bullet";
+  cell.appendChild(bullet);
+
+  let col=index%COLS;
+  let pos=40;
+
+  let fly=setInterval(()=>{
+   col++;
+   pos+=15;
+   bullet.style.left=pos+"px";
+
+   if(col>=COLS){
+    bullet.remove(); clearInterval(fly); return;
+   }
+
+   let target=cells[row*COLS+col];
+   let zombie=target.querySelector(".zombie");
+   if(zombie){
+    zombie.dataset.hp-=damage;
+    bullet.remove();
+    clearInterval(fly);
+    if(zombie.dataset.hp<=0) zombie.remove();
+   }
+  },250);
+ },rate);
+}
+
+/* ZOMBIE */
+function spawnZombie(){
+ let row=Math.floor(Math.random()*ROWS);
+ let col=COLS-1;
+
+ let z=document.createElement("div");
+ z.className="zombie";
+ z.dataset.hp=10;
+ z.innerHTML=`<img src="${images.zombie}">`;
+ cells[row*COLS+col].appendChild(z);
+
+ let walk=setInterval(()=>{
+  if(!z.parentElement){clearInterval(walk);return;}
+
+  if(col===0){
+   alert("💀 GAME OVER!");
+   location.reload();
+  }
+
+  let next=cells[row*COLS+col-1];
+  let poke=next.querySelector(".pokemon");
+
+  if(poke){
+   poke.dataset.hp--;
+   if(poke.dataset.hp<=0) poke.remove();
+  }else{
+   next.appendChild(z);
+   col--;
+  }
+ },2500); // 🔥 VERY SLOW
+}
+
+setInterval(spawnZombie,6000); // slow spawn
+</script>
+
+</body>
+</html>
