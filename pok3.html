@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pokémon vs Zombies</title>
+
+<style>
+body{
+  background: linear-gradient(#cce,#9fd);
+  font-family: Arial;
+  text-align:center;
+}
+
+#game{
+  display:grid;
+  grid-template-columns: repeat(9,70px);
+  grid-template-rows: repeat(5,70px);
+  gap:3px;
+  justify-content:center;
+  margin:20px auto;
+}
+
+.cell{
+  width:70px;
+  height:70px;
+  background:#9f9;
+  border:1px solid #333;
+  position:relative;
+  overflow:hidden;
+}
+
+.pokemon img,.zombie img{
+  width:70px;
+  height:70px;
+}
+
+.hpbar{
+  position:absolute;
+  bottom:2px;
+  left:5px;
+  width:60px;
+  height:6px;
+  background:red;
+}
+.hp{
+  height:100%;
+  background:lime;
+}
+
+.projectile{
+  width:18px;
+  height:18px;
+  position:absolute;
+  top:25px;
+  left:0;
+  animation:shoot 0.3s linear;
+}
+
+@keyframes shoot{
+  from{transform:scale(0.8)}
+  to{transform:scale(1)}
+}
+
+.sun{
+  width:26px;
+  height:26px;
+  position:absolute;
+  top:5px;
+  left:20px;
+  cursor:pointer;
+  animation:float 3s infinite alternate;
+}
+
+@keyframes float{
+  from{transform:translateY(0)}
+  to{transform:translateY(10px)}
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚡ Pokémon vs Zombie Pokémon 🧟</h2>
+<div>Energy: <b id="energy">300</b></div>
+
+<button onclick="select('pikachu',100)">Pikachu ⚡</button>
+<button onclick="select('bulbasaur',75)">Bulbasaur 🌿</button>
+
+<div id="game"></div>
+
+<script>
+const game=document.getElementById("game");
+const energyTxt=document.getElementById("energy");
+
+let energy=300;
+let selected="pikachu";
+let cost=100;
+let cells=[];
+
+const img={
+ pikachu:"https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif",
+ bulbasaur:"https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif",
+ zombie:"https://img.pokemondb.net/sprites/black-white/anim/back-normal/rattata.gif",
+ bolt:"https://i.imgur.com/f6Hb8sN.png",
+ vine:"https://i.imgur.com/2sKZ1.png",
+ sun:"https://i.imgur.com/TkV6eF8.png"
+};
+
+function select(p,c){selected=p;cost=c;}
+
+for(let i=0;i<45;i++){
+ let d=document.createElement("div");
+ d.className="cell";
+ d.onclick=()=>place(d);
+ game.appendChild(d);
+ cells.push(d);
+}
+
+function place(cell){
+ if(cell.children.length||energy<cost)return;
+
+ energy-=cost; energyTxt.innerText=energy;
+
+ let p=document.createElement("div");
+ p.className="pokemon";
+ p.hp=5;
+
+ let imgx=document.createElement("img");
+ imgx.src=img[selected];
+ p.appendChild(imgx);
+
+ let bar=document.createElement("div");
+ bar.className="hpbar";
+ let h=document.createElement("div");
+ h.className="hp"; bar.appendChild(h);
+ p.appendChild(bar);
+
+ cell.appendChild(p);
+
+ if(selected==="pikachu") shoot(cell,"bolt",1200,2);
+ if(selected==="bulbasaur"){
+   shoot(cell,"vine",800,1);
+   generateSun(cell);
+ }
+}
+
+function shoot(cell,type,speed,damage){
+ let row=Math.floor(cells.indexOf(cell)/9);
+ setInterval(()=>{
+   let proj=document.createElement("img");
+   proj.src=img[type];
+   proj.className="projectile";
+
+   let col=cells.indexOf(cell)%9+1;
+   let pos=row*9+col;
+
+   let fly=setInterval(()=>{
+     if(!cells[pos]){
+       proj.remove(); clearInterval(fly); return;
+     }
+     let target=cells[pos].querySelector(".zombie");
+     if(target){
+       target.hp-=damage;
+       target.querySelector(".hp").style.width=(target.hp*20)+"%";
+       if(target.hp<=0) target.remove();
+       proj.remove(); clearInterval(fly); return;
+     }
+     cells[pos].appendChild(proj);
+     col++; pos=row*9+col;
+   },300);
+ },speed);
+}
+
+function generateSun(cell){
+ setInterval(()=>{
+   let s=document.createElement("img");
+   s.src=img.sun;
+   s.className="sun";
+   s.onclick=()=>{energy+=25;energyTxt.innerText=energy;s.remove();}
+   cell.appendChild(s);
+ },6000);
+}
+
+function spawnZombie(){
+ let row=Math.floor(Math.random()*5);
+ let index=row*9+8;
+
+ let z=document.createElement("div");
+ z.className="zombie";
+ z.hp=4;
+
+ let zi=document.createElement("img");
+ zi.src=img.zombie;
+ z.appendChild(zi);
+
+ let bar=document.createElement("div");
+ bar.className="hpbar";
+ let h=document.createElement("div");
+ h.className="hp"; bar.appendChild(h);
+ z.appendChild(bar);
+
+ cells[index].appendChild(z);
+
+ let walk=setInterval(()=>{
+   if(!z.parentElement)return clearInterval(walk);
+   let i=cells.indexOf(z.parentElement);
+   if(i%9===0){alert("GAME OVER");location.reload();}
+   let next=cells[i-1];
+   let p=next.querySelector(".pokemon");
+   if(p){p.remove();}
+   else{next.appendChild(z);}
+ },1400);
+}
+
+setInterval(spawnZombie,4500);
+</script>
+
+</body>
+</html>
