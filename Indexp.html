@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pokémon vs Zombie Pokémon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  background:#cde;
+  font-family:Arial;
+  text-align:center;
+}
+
+#game{
+  display:grid;
+  grid-template-columns:repeat(9,70px);
+  grid-template-rows:repeat(5,70px);
+  gap:2px;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.cell{
+  width:70px;
+  height:70px;
+  background:#8f8;
+  border:1px solid #444;
+  position:relative;
+  overflow:hidden;
+}
+
+.pokemon img,
+.zombie img{
+  width:70px;
+  height:70px;
+  position:absolute;
+}
+
+.sun{
+  position:absolute;
+  top:10px;
+  left:20px;
+  width:30px;
+  height:30px;
+  background:url('https://i.imgur.com/TkV6eF8.png') no-repeat center/cover;
+  cursor:pointer;
+  animation:float 2s infinite alternate;
+}
+
+@keyframes float{
+  from{transform:translateY(0)}
+  to{transform:translateY(8px)}
+}
+</style>
+</head>
+
+<body>
+
+<h1>Pokémon vs Zombie Pokémon</h1>
+<h3>Energy: <span id="energy">150</span></h3>
+
+<button onclick="selectPokemon('pikachu',100)">Pikachu (100)</button>
+<button onclick="selectPokemon('bulbasaur',75)">Bulbasaur (75)</button>
+<button onclick="selectPokemon('charmander',125)">Charmander (125)</button>
+<button onclick="selectPokemon('chikorita',50)">Chikorita (50)</button>
+
+<div id="game"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const ROWS = 5;
+const COLS = 9;
+const ZOMBIE_HP = 3;
+
+/* ================= IMAGES ================= */
+const images = {
+  pikachu:'https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif',
+  bulbasaur:'https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif',
+  charmander:'https://img.pokemondb.net/sprites/black-white/anim/normal/charmander.gif',
+  chikorita:'https://img.pokemondb.net/sprites/black-white/anim/normal/chikorita.gif',
+  zombie:'https://img.pokemondb.net/sprites/black-white/anim/back-normal/rattata.gif'
+};
+
+/* ================= GAME STATE ================= */
+const game = document.getElementById("game");
+const energyDisplay = document.getElementById("energy");
+
+let energy = 150;
+let selected = {name:'pikachu',cost:100};
+let cells = [];
+
+/* ================= GRID ================= */
+for(let i=0;i<ROWS*COLS;i++){
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  cell.dataset.index = i;
+  cell.onclick = ()=>placePokemon(cell);
+  game.appendChild(cell);
+  cells.push(cell);
+}
+
+/* ================= SELECT ================= */
+function selectPokemon(name,cost){
+  selected = {name,cost};
+}
+
+/* ================= PLACE ================= */
+function placePokemon(cell){
+  if(cell.querySelector(".pokemon")) return;
+  if(energy < selected.cost) return;
+
+  const poke = document.createElement("div");
+  poke.className = "pokemon";
+  poke.innerHTML = `<img src="${images[selected.name]}">`;
+  cell.appendChild(poke);
+
+  energy -= selected.cost;
+  energyDisplay.textContent = energy;
+
+  if(selected.name === "pikachu" || selected.name === "charmander"){
+    shooter(cell);
+  }
+  if(selected.name === "chikorita"){
+    sunGenerator(cell);
+  }
+}
+
+/* ================= SHOOT ================= */
+function shooter(cell){
+  const index = Number(cell.dataset.index);
+  const row = Math.floor(index / COLS);
+
+  setInterval(()=>{
+    for(let col=(index%COLS)+1; col<COLS; col++){
+      const target = cells[row*COLS + col];
+      const zombie = target.querySelector(".zombie");
+      if(zombie){
+        zombie.dataset.hp--;
+        if(zombie.dataset.hp <= 0) zombie.remove();
+        break;
+      }
+    }
+  },2000);
+}
+
+/* ================= SUN ================= */
+function sunGenerator(cell){
+  setInterval(()=>{
+    const sun = document.createElement("div");
+    sun.className="sun";
+    sun.onclick=()=>{
+      energy+=25;
+      energyDisplay.textContent=energy;
+      sun.remove();
+    };
+    cell.appendChild(sun);
+    setTimeout(()=>sun.remove(),4000);
+  },5000);
+}
+
+/* ================= ZOMBIE ================= */
+function spawnZombie(){
+  const row = Math.floor(Math.random()*ROWS);
+  let col = COLS-1;
+
+  const zombie = document.createElement("div");
+  zombie.className="zombie";
+  zombie.dataset.hp = ZOMBIE_HP;
+  zombie.innerHTML = `<img src="${images.zombie}">`;
+
+  cells[row*COLS+col].appendChild(zombie);
+
+  const walk = setInterval(()=>{
+    if(!zombie.parentElement){clearInterval(walk);return;}
+
+    if(col===0){
+      alert("GAME OVER!");
+      location.reload();
+    }
+
+    const next = cells[row*COLS+(col-1)];
+    const plant = next.querySelector(".pokemon");
+
+    if(plant){
+      plant.remove();
+    }else{
+      next.appendChild(zombie);
+      col--;
+    }
+  },1000);
+}
+
+setInterval(spawnZombie,4000);
+</script>
+
+</body>
+</html>
