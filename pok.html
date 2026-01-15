@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pokémon vs Zombies</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  background:#bde;
+  font-family:Arial;
+  text-align:center;
+}
+
+#game{
+  display:grid;
+  grid-template-columns:repeat(9,70px);
+  grid-template-rows:repeat(5,70px);
+  gap:2px;
+  justify-content:center;
+  margin-top:15px;
+}
+
+.cell{
+  width:70px;
+  height:70px;
+  background:#7cfc90;
+  border:1px solid #333;
+  position:relative;
+  overflow:hidden;
+}
+
+.pokemon img,
+.zombie img{
+  width:70px;
+  height:70px;
+  position:absolute;
+}
+
+.bullet{
+  width:15px;
+  height:15px;
+  background:yellow;
+  border-radius:50%;
+  position:absolute;
+  top:28px;
+  left:60px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚡ Pokémon vs Zombie Pokémon</h1>
+<h3>Energy: <span id="energy">150</span></h3>
+
+<button onclick="selectPokemon('pikachu',100)">Pikachu</button>
+<button onclick="selectPokemon('bulbasaur',75)">Bulbasaur</button>
+
+<div id="game"></div>
+
+<script>
+/* ================= GAME CONFIG ================= */
+const ROWS = 5;
+const COLS = 9;
+
+/* ================= IMAGES ================= */
+const images = {
+  pikachu:'https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif',
+  bulbasaur:'https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif',
+  zombie:'https://img.pokemondb.net/sprites/black-white/anim/back-normal/rattata.gif'
+};
+
+/* ================= STATE ================= */
+let energy = 150;
+let selected = {name:'pikachu', cost:100};
+const game = document.getElementById("game");
+const energyEl = document.getElementById("energy");
+const cells = [];
+
+/* ================= GRID ================= */
+for(let i=0;i<ROWS*COLS;i++){
+  const c = document.createElement("div");
+  c.className="cell";
+  c.dataset.index=i;
+  c.onclick=()=>placePokemon(c);
+  game.appendChild(c);
+  cells.push(c);
+}
+
+/* ================= SELECT ================= */
+function selectPokemon(name,cost){
+  selected={name,cost};
+}
+
+/* ================= PLACE ================= */
+function placePokemon(cell){
+  if(cell.querySelector(".pokemon")) return;
+  if(energy < selected.cost) return;
+
+  const poke=document.createElement("div");
+  poke.className="pokemon";
+  poke.dataset.hp=5;
+  poke.innerHTML=`<img src="${images[selected.name]}">`;
+  cell.appendChild(poke);
+
+  energy-=selected.cost;
+  energyEl.textContent=energy;
+
+  startShooting(cell,poke);
+}
+
+/* ================= SHOOTING ================= */
+function startShooting(cell,pokemon){
+  const index = Number(cell.dataset.index);
+  const row = Math.floor(index / COLS);
+
+  const shoot = setInterval(()=>{
+    if(!pokemon.parentElement){
+      clearInterval(shoot);
+      return;
+    }
+
+    const bullet=document.createElement("div");
+    bullet.className="bullet";
+    cell.appendChild(bullet);
+
+    let col=index%COLS;
+    const fly=setInterval(()=>{
+      col++;
+      if(col>=COLS){
+        bullet.remove();
+        clearInterval(fly);
+        return;
+      }
+
+      const target=cells[row*COLS+col];
+      bullet.style.left = (col*70 - index%COLS*70 + 45)+"px";
+
+      const zombie=target.querySelector(".zombie");
+      if(zombie){
+        zombie.dataset.hp--;
+        bullet.remove();
+        clearInterval(fly);
+        if(zombie.dataset.hp<=0) zombie.remove();
+      }
+    },200);
+
+  },1500);
+}
+
+/* ================= ZOMBIE ================= */
+function spawnZombie(){
+  const row=Math.floor(Math.random()*ROWS);
+  let col=COLS-1;
+
+  const zombie=document.createElement("div");
+  zombie.className="zombie";
+  zombie.dataset.hp=6;
+  zombie.innerHTML=`<img src="${images.zombie}">`;
+  cells[row*COLS+col].appendChild(zombie);
+
+  const walk=setInterval(()=>{
+    if(!zombie.parentElement){
+      clearInterval(walk);
+      return;
+    }
+
+    if(col===0){
+      alert("💀 GAME OVER!");
+      location.reload();
+    }
+
+    const next=cells[row*COLS+col-1];
+    const poke=next.querySelector(".pokemon");
+
+    if(poke){
+      poke.dataset.hp--;
+      if(poke.dataset.hp<=0) poke.remove();
+    }else{
+      next.appendChild(zombie);
+      col--;
+    }
+  },1000);
+}
+
+setInterval(spawnZombie,3500);
+</script>
+
+</body>
+</html>
