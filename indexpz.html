@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pokémon Siege | Elite Defense</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a2f1f 0%, #0a1f12 100%);
+            font-family: 'Segoe UI', 'Poppins', 'Press Start 2P', monospace;
+            text-align: center;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* main game panel */
+        .game-container {
+            background: rgba(0, 0, 0, 0.65);
+            border-radius: 64px;
+            padding: 20px 30px 30px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,215,0,0.4);
+        }
+
+        h2 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #FFD966, #FFB347);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin: 0 0 8px 0;
+            letter-spacing: 2px;
+        }
+
+        .sub {
+            color: #b8f2e2;
+            font-size: 14px;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        /* top bar premium */
+        .resource-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e2a24;
+            padding: 8px 24px;
+            border-radius: 60px;
+            margin: 15px 10px;
+            gap: 40px;
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.3);
+        }
+
+        .energy-box {
+            background: #2c3e2b;
+            padding: 6px 18px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: bold;
+            font-size: 24px;
+            color: #FFE484;
+            text-shadow: 0 0 5px #ffaa33;
+        }
+
+        .energy-box span:first-child {
+            font-size: 20px;
+            background: #f5b042;
+            padding: 5px 10px;
+            border-radius: 30px;
+            color: #1e2a1a;
+        }
+
+        .score-board {
+            background: #111c14;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #fcd36a;
+        }
+
+        /* Pokemon cards */
+        .card-deck {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            margin: 10px 0 15px;
+        }
+
+        .poke-card {
+            background: radial-gradient(circle at 20% 25%, #ffefb0, #e0a82b);
+            padding: 10px 18px;
+            border-radius: 48px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid #ffcd7e;
+            box-shadow: 0 8px 0 #7a3e0a;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .poke-card.selected {
+            background: radial-gradient(circle at 30% 30%, #ffdd88, #ffa500);
+            border: 3px solid gold;
+            box-shadow: 0 0 15px #ffbb33;
+            transform: scale(1.02);
+        }
+
+        .poke-card img {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.4));
+        }
+
+        .cost-badge {
+            background: #2c2b1f;
+            padding: 4px 12px;
+            border-radius: 40px;
+            color: #FFD966;
+            font-size: 16px;
+        }
+
+        /* game grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 78px);
+            grid-template-rows: repeat(5, 78px);
+            gap: 5px;
+            background: #2c4a2e;
+            padding: 15px;
+            border-radius: 48px;
+            box-shadow: inset 0 0 0 2px #5f8b4c, 0 20px 30px black;
+            margin-top: 8px;
+        }
+
+        .cell {
+            background: radial-gradient(ellipse at center, #6f9e5f, #3d6b32);
+            border-radius: 18px;
+            box-shadow: inset 0 1px 3px #c0ffb0, 0 3px 6px rgba(0,0,0,0.4);
+            transition: 0.07s linear;
+            position: relative;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            background: #7fb073;
+            transform: scale(0.98);
+            box-shadow: inset 0 0 8px #eaffb2;
+        }
+
+        .pokemon, .zombie {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: fadeSlide 0.2s ease;
+        }
+
+        .pokemon img, .zombie img {
+            width: 62px;
+            height: 62px;
+            object-fit: contain;
+            filter: drop-shadow(2px 4px 6px black);
+        }
+
+        /* modern health bar */
+        .hpbar {
+            position: absolute;
+            bottom: 4px;
+            left: 8px;
+            width: calc(100% - 16px);
+            height: 8px;
+            background: #5a1e1e;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px black;
+        }
+        .hp {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #6eff6e, #1edb1e);
+            border-radius: 20px;
+            transition: width 0.1s linear;
+        }
+
+        .zombie .hp {
+            background: linear-gradient(90deg, #bc3f2f, #ff6a4b);
+        }
+
+        /* projectiles VFX */
+        .projectile {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 100;
+            filter: drop-shadow(0 0 4px gold);
+            animation: zapPulse 0.2s ease-out;
+        }
+
+        .sun {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 0 6px orange);
+            transition: 0.1s linear;
+            animation: floatSun 1s infinite alternate;
+            z-index: 20;
+        }
+        .sun:hover {
+            transform: translateX(-50%) scale(1.2);
+            filter: drop-shadow(0 0 15px yellow);
+        }
+
+        /* attack flash effect */
+        .damage-flash {
+            animation: hitFlash 0.2s ease-in-out 2;
+        }
+
+        @keyframes hitFlash {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.8) drop-shadow(0 0 5px red); }
+            100% { filter: brightness(1); }
+        }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes zapPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes floatSun {
+            0% { transform: translateX(-50%) translateY(0px); }
+            100% { transform: translateX(-50%) translateY(-6px); }
+        }
+
+        .game-over-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: monospace;
+        }
+
+        .modal-content {
+            background: #2d2116;
+            padding: 30px 50px;
+            border-radius: 70px;
+            text-align: center;
+            border: 3px solid gold;
+            box-shadow: 0 0 50px #ff8800;
+        }
+
+        .restart-btn {
+            background: #ffaa33;
+            border: none;
+            font-size: 24px;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 780px) {
+            .game-grid {
+                grid-template-columns: repeat(9, 62px);
+                grid-template-rows: repeat(5, 62px);
+                gap: 3px;
+            }
+            .pokemon img, .zombie img { width: 48px; height: 48px; }
+            .projectile { width: 22px; height: 22px; }
+            .poke-card { padding: 4px 12px; font-size: 14px; }
+            .energy-box { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h2>⚡ POKÉMON SIEGE ⚔️</h2>
+    <div class="sub">ELITE DEFENSE • ZOMBIE INVASION</div>
+
+    <div class="resource-panel">
+        <div class="energy-box">
+            <span>⚡ ENERGY</span>
+            <b id="energyValue">450</b>
+        </div>
+        <div class="score-board">
+            🧟 ELIMINATED: <span id="killCount">0</span>
+        </div>
+        <div class="score-board">
+            🌟 WAVE: <span id="waveCount">1</span>
+        </div>
+    </div>
+
+    <div class="card-deck">
+        <div id="cardPika" class="poke-card" data-type="pikachu" data-cost="110">
+            <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif" alt="pikachu">
+            <span>⚡ THUNDERBOLT</span>
+            <span class="cost-badge">110⚡</span>
+        </div>
+        <div id="cardBulba" class="poke-card" data-type="bulbasaur" data-cost="85">
+            <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif" alt="bulbasaur">
+            <span>🌿 RAZOR LEAF</span>
+            <span class="cost-badge">85⚡</span>
+        </div>
+        <div id="cardCharm" class="poke-card" data-type="charmander" data-cost="130">
+            <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/charmander.gif" alt="charmander">
+            <span>🔥 FLAME BURST</span>
+            <span class="cost-badge">130⚡</span>
+        </div>
+    </div>
+
+    <div id="gameGrid" class="game-grid"></div>
+</div>
+
+<script>
+    // ---------- PRO CONFIG ----------
+    const GRID_COLS = 9;
+    const GRID_ROWS = 5;
+    let cells = [];         // 2D array reference for faster access
+    let energy = 450;
+    let killTotal = 0;
+    let currentWave = 1;
+    let selectedType = "pikachu";
+    let selectedCost = 110;
+    let gameActive = true;
+    let spawnInterval = null;
+    let waveInterval = null;
+    let activeIntervals = [];  // store all intervals/animations to clear on game over
+
+    // Advanced pokemon stats
+    const POKEMON_STATS = {
+        pikachu: { damage: 3, attackSpeed: 1400, projectile: "bolt", imgKey: "pikachu", color: "gold", aoe: false, dot: false },
+        bulbasaur: { damage: 2, attackSpeed: 1200, projectile: "vine", imgKey: "bulbasaur", sunGen: true, sunInterval: 6500, poison: true },
+        charmander: { damage: 5, attackSpeed: 1800, projectile: "flame", imgKey: "charmander", burn: true, aoeRadius: 1 }
+    };
+
+    const IMG_ASSETS = {
+        pikachu: "https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif",
+        bulbasaur: "https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif",
+        charmander: "https://img.pokemondb.net/sprites/black-white/anim/normal/charmander.gif",
+        zombie: "https://img.pokemondb.net/sprites/black-white/anim/back-normal/rattata.gif",
+        zombieElite: "https://img.pokemondb.net/sprites/black-white/anim/back-normal/raticate.gif",
+        bolt: "https://i.imgur.com/f6Hb8sN.png",
+        vine: "https://i.imgur.com/2sKZ1.png",
+        flame: "https://i.imgur.com/KjP2lTQ.png",
+        sun: "https://i.imgur.com/TkV6eF8.png"
+    };
+
+    // Utility DOM
+    const gridContainer = document.getElementById("gameGrid");
+    const energySpan = document.getElementById("energyValue");
+    const killSpan = document.getElementById("killCount");
+    const waveSpan = document.getElementById("waveCount");
+
+    // Build grid with 2D array
+    function buildGrid() {
+        gridContainer.innerHTML = "";
+        cells = Array(GRID_ROWS).fill().map(() => Array(GRID_COLS).fill(null));
+        for (let row = 0; row < GRID_ROWS; row++) {
+            for (let col = 0; col < GRID_COLS; col++) {
+                const cellDiv = document.createElement("div");
+                cellDiv.classList.add("cell");
+                cellDiv.setAttribute("data-row", row);
+                cellDiv.setAttribute("data-col", col);
+                cellDiv.onclick = (function(r,c) { return () => handlePlacePokemon(r,c); })(row,col);
+                gridContainer.appendChild(cellDiv);
+                cells[row][col] = cellDiv;
+            }
+        }
+    }
+
+    // Energy & UI update
+    function updateEnergyUI() {
+        energySpan.innerText = Math.floor(energy);
+    }
+
+    function addEnergy(amount) {
+        if (!gameActive) return;
+        energy += amount;
+        updateEnergyUI();
+    }
+
+    function spendEnergy(cost) {
+        if (energy >= cost && gameActive) {
+            energy -= cost;
+            updateEnergyUI();
+            return true;
+        }
+        return false;
+    }
+
+    // Place Pokemon with advanced mechanics
+    function handlePlacePokemon(row, col) {
+        if (!gameActive) return;
+        const cellDiv = cells[row][col];
+        if (cellDiv.children.length > 0) return; // occupied
+        if (!spendEnergy(selectedCost)) {
+            showFloatingMsg("Not enough Energy!", cellDiv);
+            return;
+        }
+
+        const stats = POKEMON_STATS[selectedType];
+        const pokemonDiv = document.createElement("div");
+        pokemonDiv.classList.add("pokemon");
+        pokemonDiv.setAttribute("data-hp", "8");
+        pokemonDiv.setAttribute("data-maxhp", "8");
+        pokemonDiv.setAttribute("data-type", selectedType);
+        
+        const img = document.createElement("img");
+        img.src = IMG_ASSETS[stats.imgKey];
+        pokemonDiv.appendChild(img);
+        
+        const hpBar = document.createElement("div");
+        hpBar.className = "hpbar";
+        const hpFill = document.createElement("div");
+        hpFill.className = "hp";
+        hpFill.style.width = "100%";
+        hpBar.appendChild(hpFill);
+        pokemonDiv.appendChild(hpBar);
+        
+        cellDiv.appendChild(pokemonDiv);
+        
+        // Attack system
+        startPokemonAttack(row, col, pokemonDiv, stats);
+        
+        // Bulbasaur special : generate sun orbs
+        if (selectedType === "bulbasaur" && stats.sunGen) {
+            const sunIntervalId = setInterval(() => {
+                if (!gameActive || !pokemonDiv.isConnected) {
+                    clearInterval(sunIntervalId);
+                    return;
+                }
+                createSunOrb(cellDiv);
+            }, stats.sunInterval);
+            activeIntervals.push(sunIntervalId);
+        }
+        
+        // Charmander flame aura (visual)
+        if (selectedType === "charmander") {
+            pokemonDiv.style.filter = "drop-shadow(0 0 4px orangered)";
+        }
+    }
+    
+    function startPokemonAttack(row, col, pokemonDiv, stats) {
+        const attackInterval = setInterval(() => {
+            if (!gameActive || !pokemonDiv.isConnected) {
+                clearInterval(attackInterval);
+                return;
+            }
+            // find first zombie in same row to the right
+            let targetZombie = null;
+            let targetCell = null;
+            for (let c = col+1; c < GRID_COLS; c++) {
+                const cell = cells[row][c];
+                if (cell && cell.children.length > 0) {
+                    const zombie = cell.querySelector(".zombie");
+                    if (zombie) {
+                        targetZombie = zombie;
+                        targetCell = cell;
+                        break;
+                    }
+                }
+            }
+            if (targetZombie) {
+                launchProjectile(row, col, targetCell, stats, pokemonDiv);
+            }
+        }, stats.attackSpeed);
+        activeIntervals.push(attackInterval);
+    }
+    
+    function launchProjectile(row, startCol, targetCell, stats, sourcePokemon) {
+        const startCell = cells[row][startCol];
+        if (!startCell || !targetCell) return;
+        const projImg = document.createElement("img");
+        projImg.src = IMG_ASSETS[stats.projectile] || IMG_ASSETS.bolt;
+        projImg.classList.add("projectile");
+        startCell.appendChild(projImg);
+        
+        let steps = 0;
+        const totalSteps = Math.abs(targetCell.cellIndex ? (targetCell.cellIndex % GRID_COLS) - startCol : 2);
+        const moveInterval = setInterval(() => {
+            if (!projImg.isConnected || !targetCell.isConnected || !gameActive) {
+                projImg?.remove();
+                clearInterval(moveInterval);
+                return;
+            }
+            const currentParent = projImg.parentElement;
+            if (currentParent === targetCell) {
+                // HIT !
+                const zombieDiv = targetCell.querySelector(".zombie");
+                if (zombieDiv) {
+                    applyDamage(zombieDiv, stats.damage, stats);
+                    vfxHit(targetCell);
+                }
+                projImg.remove();
+                clearInterval(moveInterval);
+            } else {
+                // move to next cell to the right
+                const parentRow = row;
+                let currentCol = Array.from(gridContainer.children).indexOf(currentParent) % GRID_COLS;
+                if (currentCol < GRID_COLS-1) {
+                    const nextCell = cells[parentRow][currentCol+1];
+                    if (nextCell) nextCell.appendChild(projImg);
+                    else projImg.remove();
+                } else {
+                    projImg.remove();
+                    clearInterval(moveInterval);
+                }
+            }
+        }, 60);
+        activeIntervals.push(moveInterval);
+    }
+    
+    function applyDamage(zombieDiv, dmg, stats) {
+        let currentHp = parseFloat(zombieDiv.getAttribute("data-hp"));
+        if (isNaN(currentHp)) currentHp = zombieDiv.hp || 5;
+        const newHp = currentHp - dmg;
+        zombieDiv.setAttribute("data-hp", newHp);
+        zombieDiv.hp = newHp;
+        const hpFill = zombieDiv.querySelector(".hp");
+        if (hpFill) {
+            let maxHp = parseFloat(zombieDiv.getAttribute("data-maxhp")) || 5;
+            let percent = Math.max(0, (newHp / maxHp) * 100);
+            hpFill.style.width = percent + "%";
+        }
+        if (newHp <= 0) {
+            // Zombie eliminated
+            zombieDiv.remove();
+            killTotal++;
+            killSpan.innerText = killTotal;
+            addEnergy(30);  // reward energy
+            // Wave progression based on kills
+            if (killTotal % 8 === 0 && killTotal > 0) {
+                advanceWave();
+            }
+        } else {
+            // damage flash effect
+            zombieDiv.classList.add("damage-flash");
+            setTimeout(() => zombieDiv.classList.remove("damage-flash"), 150);
+        }
+        // Charmander burn effect
+        if (stats.burn && Math.random() < 0.35 && newHp > 0) {
+            setTimeout(() => {
+                if (zombieDiv.isConnected) applyDamage(zombieDiv, 1, { damage:1 });
+            }, 600);
+        }
+    }
+    
+    function vfxHit(cell) {
+        cell.style.backgroundColor = "#ffaa66";
+        setTimeout(() => { if(cell) cell.style.backgroundColor = ""; }, 100);
+    }
+    
+    function createSunOrb(cell) {
+        if (!gameActive || !cell.isConnected) return;
+        const sunImg = document.createElement("img");
+        sunImg.src = IMG_ASSETS.sun;
+        sunImg.classList.add("sun");
+        sunImg.onclick = (e) => {
+            e.stopPropagation();
+            if (!gameActive) return;
+            addEnergy(35);
+            sunImg.remove();
+            showFloatingMsg("+35⚡", cell);
+        };
+        cell.appendChild(sunImg);
+        setTimeout(() => { if(sunImg.isConnected) sunImg.remove(); }, 8000);
+    }
+    
+    // ZOMBIE SPAWN SYSTEM WITH WAVE DIFFICULTY
+    function spawnZombieWithWave() {
+        if (!gameActive) return;
+        const row = Math.floor(Math.random() * GRID_ROWS);
+        const startCol = GRID_COLS - 1;
+        const cell = cells[row][startCol];
+        if (!cell) return;
+        if (cell.children.length > 0 && cell.querySelector(".zombie")) return;
+        
+        let zombieHp = 5 + Math.floor(currentWave / 2);
+        let zombieSpeed = 1500 - Math.min(400, currentWave * 15);
+        let zombieType = (currentWave >= 3 && Math.random() < 0.3) ? "elite" : "normal";
+        let imgSrc = zombieType === "elite" ? IMG_ASSETS.zombieElite : IMG_ASSETS.zombie;
+        let zombieDiv = document.createElement("div");
+        zombieDiv.classList.add("zombie");
+        zombieDiv.setAttribute("data-hp", zombieHp);
+        zombieDiv.setAttribute("data-maxhp", zombieHp);
+        zombieDiv.hp = zombieHp;
+        
+        let img = document.createElement("img");
+        img.src = imgSrc;
+        zombieDiv.appendChild(img);
+        let hpBar = document.createElement("div");
+        hpBar.className = "hpbar";
+        let hpFill = document.createElement("div");
+        hpFill.className = "hp";
+        hpFill.style.width = "100%";
+        hpBar.appendChild(hpFill);
+        zombieDiv.appendChild(hpBar);
+        cell.appendChild(zombieDiv);
+        
+        let walkInterval = setInterval(() => {
+            if (!gameActive || !zombieDiv.isConnected) {
+                clearInterval(walkInterval);
+                return;
+            }
+            let currentCell = zombieDiv.parentElement;
+            if (!currentCell) return;
+            let currentCol = Array.from(gridContainer.children).indexOf(currentCell) % GRID_COLS;
+            let currentRow = Math.floor(Array.from(gridContainer.children).indexOf(currentCell) / GRID_COLS);
+            if (currentCol === 0) {
+                gameLose();
+                return;
+            }
+            let prevCell = cells[currentRow][currentCol-1];
+            if (prevCell) {
+                let defender = prevCell.querySelector(".pokemon");
+                if (defender) {
+                    // Zombie attacks pokemon
+                    let pokemonHp = parseFloat(defender.getAttribute("data-hp") || 8);
+                    let newHp = pokemonHp - (zombieType === "elite" ? 3 : 2);
+                    defender.setAttribute("data-hp", newHp);
+                    let hpFillDef = defender.querySelector(".hp");
+                    if (hpFillDef) {
+                        let maxHp = parseFloat(defender.getAttribute("data-maxhp") || 8);
+                        let percent = Math.max(0, (newHp / maxHp) * 100);
+                        hpFillDef.style.width = percent + "%";
+                    }
+                    if (newHp <= 0) {
+                        defender.remove();
+                    }
+                    vfxHit(prevCell);
+                } else {
+                    prevCell.appendChild(zombieDiv);
+                }
+            }
+        }, zombieSpeed);
+        activeIntervals.push(walkInterval);
+    }
+    
+    function advanceWave() {
+        currentWave++;
+        waveSpan.innerText = currentWave;
+        showGlobalMessage(`🔥 WAVE ${currentWave} — STRONGER ZOMBIES! 🔥`);
+        // increase spawn rate
+        if (spawnInterval) clearInterval(spawnInterval);
+        let newSpawnDelay = Math.max(1800, 3800 - currentWave * 80);
+        spawnInterval = setInterval(() => spawnZombieWithWave(), newSpawnDelay);
+        activeIntervals.push(spawnInterval);
+    }
+    
+    function gameLose() {
+        if (!gameActive) return;
+        gameActive = false;
+        for (let id of activeIntervals) clearInterval(id);
+        activeIntervals = [];
+        if (spawnInterval) clearInterval(spawnInterval);
+        const modal = document.createElement("div");
+        modal.className = "game-over-modal";
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h1 style="color:#ffaa44;">⚔️ GAME OVER ⚔️</h1>
+                <p style="font-size:24px;">Zombies breached the line!</p>
+                <p>🏆 ELIMINATIONS: ${killTotal} &nbsp;&nbsp;🌊 WAVE: ${currentWave}</p>
+                <button class="restart-btn" id="restartGameBtn">⚡ RESTART ⚡</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById("restartGameBtn").onclick = () => location.reload();
+    }
+    
+    function showFloatingMsg(msg, cell) {
+        const span = document.createElement("div");
+        span.innerText = msg;
+        span.style.position = "absolute";
+        span.style.top = "-20px";
+        span.style.left = "20px";
+        span.style.color = "#ffdd77";
+        span.style.fontWeight = "bold";
+        span.style.textShadow = "1px 1px black";
+        span.style.fontSize = "14px";
+        span.style.pointerEvents = "none";
+        span.style.zIndex = "200";
+        cell.appendChild(span);
+        setTimeout(() => span.remove(), 800);
+    }
+    
+    function showGlobalMessage(msg) {
+        const banner = document.createElement("div");
+        banner.innerText = msg;
+        banner.style.position = "fixed";
+        banner.style.top = "20%";
+        banner.style.left = "50%";
+        banner.style.transform = "translateX(-50%)";
+        banner.style.background = "#000000aa";
+        banner.style.backdropFilter = "blur(10px)";
+        banner.style.padding = "10px 24px";
+        banner.style.borderRadius = "60px";
+        banner.style.color = "#ffcc55";
+        banner.style.fontWeight = "bold";
+        banner.style.fontSize = "22px";
+        banner.style.zIndex = "999";
+        banner.style.border = "2px solid gold";
+        document.body.appendChild(banner);
+        setTimeout(() => banner.remove(), 1800);
+    }
+    
+    // select cards pro
+    function initCardSelection() {
+        const pikaCard = document.getElementById("cardPika");
+        const bulbaCard = document.getElementById("cardBulba");
+        const charmCard = document.getElementById("cardCharm");
+        
+        function setActive(card, type, cost) {
+            document.querySelectorAll(".poke-card").forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            selectedType = type;
+            selectedCost = cost;
+        }
+        pikaCard.onclick = () => setActive(pikaCard, "pikachu", 110);
+        bulbaCard.onclick = () => setActive(bulbaCard, "bulbasaur", 85);
+        charmCard.onclick = () => setActive(charmCard, "charmander", 130);
+        setActive(pikaCard, "pikachu", 110);
+    }
+    
+    // Start Game
+    function startGame() {
+        buildGrid();
+        initCardSelection();
+        updateEnergyUI();
+        gameActive = true;
+        spawnInterval = setInterval(() => spawnZombieWithWave(), 3200);
+        activeIntervals.push(spawnInterval);
+        // extra wave advance after 12 kills
+    }
+    
+    startGame();
+</script>
+</body>
+</html>
