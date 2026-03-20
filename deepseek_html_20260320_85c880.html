@@ -1,0 +1,63 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pokémon Siege | Mobile Defense</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="header">
+                <h2>⚡ POKÉMON SIEGE ⚔️</h2>
+                <div class="sub">DEFEND YOUR LINE • ZOMBIE INVASION</div>
+            </div>
+
+            <div class="resource-panel">
+                <div class="energy-box">
+                    <span>⚡</span>
+                    <b id="energyValue">450</b>
+                </div>
+                <div class="stat-box">
+                    <span>🧟</span>
+                    <span id="killCount">0</span>
+                </div>
+                <div class="stat-box">
+                    <span>🌊</span>
+                    <span id="waveCount">1</span>
+                </div>
+            </div>
+
+            <div class="card-deck">
+                <div class="poke-card" data-type="pikachu" data-cost="110">
+                    <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/pikachu.gif" alt="pikachu">
+                    <div class="card-info">
+                        <span class="card-name">Pikachu</span>
+                        <span class="cost">110⚡</span>
+                    </div>
+                </div>
+                <div class="poke-card" data-type="bulbasaur" data-cost="85">
+                    <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/bulbasaur.gif" alt="bulbasaur">
+                    <div class="card-info">
+                        <span class="card-name">Bulbasaur</span>
+                        <span class="cost">85⚡</span>
+                    </div>
+                </div>
+                <div class="poke-card" data-type="charmander" data-cost="130">
+                    <img src="https://img.pokemondb.net/sprites/black-white/anim/normal/charmander.gif" alt="charmander">
+                    <div class="card-info">
+                        <span class="card-name">Charmander</span>
+                        <span class="cost">130⚡</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gameGrid" class="game-grid"></div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
